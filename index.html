@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EC2 Deployment Success</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="icon">
+            🚀
+        </div>
+
+        <h1>
+            Application Deployed Successfully
+        </h1>
+
+        <p class="subtitle">
+            Your application is running on AWS EC2
+        </p>
+
+
+        <div class="status-box">
+
+            <div class="status">
+                <span class="dot"></span>
+                Deployment Status: SUCCESS
+            </div>
+
+
+            <div class="info">
+
+                <p>
+                    ⚙️ CI/CD Tool:
+                    <strong>Jenkins Pipeline</strong>
+                </p>
+
+
+                <p>
+                    ☁️ Cloud:
+                    <strong>AWS EC2</strong>
+                </p>
+
+
+                <p>
+                    🐳 Runtime:
+                    <strong>Production Environment</strong>
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <button onclick="showMessage()">
+            Check Deployment
+        </button>
+
+
+        <p id="message"></p>
+
+
+    </div>
+
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
