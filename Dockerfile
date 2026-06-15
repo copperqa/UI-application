@@ -1,10 +1,13 @@
-# Use nginx lightweight image
-FROM nginx:alpine
+# Use updated nginx alpine image
+FROM nginx:stable-alpine
+
+# Update Alpine packages to latest security patches
+RUN apk update && apk upgrade
 
 # Remove default nginx page
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy your frontend files
+# Copy frontend files
 COPY . /usr/share/nginx/html
 
 # Expose nginx port
