@@ -20,28 +20,12 @@ pipeline {
                 }
             }
         }
-        stage('Copy Code From GitHub') {
+        stage('Install Dependencies') {
             steps {
                 sshagent(["${SSH_CREDENTIALS}"]) {
                     sh """
                     ssh -o StrictHostKeyChecking=no \
                     ${EC2_USER}@${EC2_HOST} '
-                    rm -rf ui-deployment
-                    git clone ${GITHUB_REPO} ui-deployment
-                    cd ui-deployment
-                    echo "Code downloaded"
-                    '
-                    """
-                }
-            }
-        }
-        stage('Install Docker') {
-            steps {
-                sshagent(["${SSH_CREDENTIALS}"]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no \
-                    ${EC2_USER}@${EC2_HOST} '
-
                     if ! command -v docker >/dev/null
                     then
                         echo Installing Docker
@@ -52,7 +36,47 @@ pipeline {
                     else
                         echo Docker already installed
                     fi
+
                     docker --version
+
+                    if ! command -v trivy >/dev/null
+                    then
+                        echo Installing Trivy
+                        sudo apt update
+                        sudo apt install wget apt-transport-https gnupg lsb-release -y
+
+                        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+                        | gpg --dearmor \
+                        | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+
+                        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb \$(lsb_release -sc) main" \
+                        | sudo tee /etc/apt/sources.list.d/trivy.list
+
+                        sudo apt update
+                        sudo apt install trivy -y
+                    else
+                        echo Trivy already installed
+                    fi
+
+                    trivy --version
+
+                    echo Dependencies Installed Successfully
+                    '
+                    """
+
+                }
+            }
+        }
+        stage('Copy Code From GitHub') {
+            steps {
+                sshagent(["${SSH_CREDENTIALS}"]) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no \
+                    ${EC2_USER}@${EC2_HOST} '
+                    rm -rf ui-deployment
+                    git clone ${GITHUB_REPO} ui-deployment
+                    cd ui-deployment
+                    echo "Code downloaded"
                     '
                     """
                 }
@@ -69,38 +93,6 @@ pipeline {
                     docker build \
                     -t ${IMAGE_NAME}:latest . || exit 1
                     echo Image Build Completed
-                    '
-                    """
-                }
-            }
-        }
-
-        stage('Install Trivy') {
-            steps {
-                sshagent(["${SSH_CREDENTIALS}"]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no \
-                    ${EC2_USER}@${EC2_HOST} '
-                    if ! command -v trivy >/dev/null
-                    then
-                    echo Installing Trivy
-                    sudo apt update
-                    sudo apt install wget apt-transport-https gnupg lsb-release -y
-                    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
-                    | gpg --dearmor \
-                    | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-
-                    echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
-                    https://aquasecurity.github.io/trivy-repo/deb \
-                    \$(lsb_release -sc) main" \
-                    | sudo tee /etc/apt/sources.list.d/trivy.list
-
-                    sudo apt update
-                    sudo apt install trivy -y
-                    else
-                    echo Trivy already installed
-                    fi
-                    trivy --version
                     '
                     """
                 }
@@ -144,7 +136,6 @@ pipeline {
             }
         }
     }
-
 
     post {
         success {
